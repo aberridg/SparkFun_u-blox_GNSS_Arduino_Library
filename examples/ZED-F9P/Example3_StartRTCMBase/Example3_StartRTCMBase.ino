@@ -54,7 +54,7 @@ void setup()
   // Uncomment the next line if you want to reset your module back to the default settings with 1Hz navigation rate
   //myGNSS.factoryDefault(); delay(5000);
 
-  myGNSS.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only (turn off NMEA noise)
+  myGNSS.setI2COutput(COM_TYPE_UBX | COM_TYPE_NMEA | COM_TYPE_RTCM3); // Ensure RTCM3 is enabled
   myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT); //Save the communications port settings to flash and BBR
 
   while (Serial.available()) Serial.read(); //Clear any latent chars in serial buffer
@@ -107,6 +107,7 @@ void setup()
     //The ZED-F9P is slightly different than the NEO-M8P. See the Integration manual 3.5.8 for more info.
     //response = myGNSS.enableSurveyMode(300, 2.000); //Enable Survey in on NEO-M8P, 300 seconds, 2.0m
     response = myGNSS.enableSurveyMode(60, 5.000); //Enable Survey in, 60 seconds, 5.0m
+    //response = myGNSS.enableSurveyModeFull(86400, 2.000); //Enable Survey in, 24 hours, 2.0m
     if (response == false)
     {
       Serial.println(F("Survey start failed. Freezing..."));
@@ -136,14 +137,14 @@ void setup()
     // From v2.0, the data from getSurveyStatus (UBX-NAV-SVIN) is returned in UBX_NAV_SVIN_t packetUBXNAVSVIN
     // Please see u-blox_structs.h for the full definition of UBX_NAV_SVIN_t
     // You can either read the data from packetUBXNAVSVIN directly
-    // or can use the helper functions: getSurveyInActive; getSurveyInValid; getSurveyInObservationTime; and getSurveyInMeanAccuracy
+    // or can use the helper functions: getSurveyInActive; getSurveyInValid; getSurveyInObservationTime; getSurveyInObservationTimeFull; and getSurveyInMeanAccuracy
     response = myGNSS.getSurveyStatus(2000); //Query module for SVIN status with 2000ms timeout (req can take a long time)
     
     if (response == true) // Check if fresh data was received
     {
       Serial.print(F("Press x to end survey - "));
       Serial.print(F("Time elapsed: "));
-      Serial.print((String)myGNSS.getSurveyInObservationTime()); // Call the helper function
+      Serial.print((String)myGNSS.getSurveyInObservationTimeFull()); // Call the helper function
       Serial.print(F(" ("));
       Serial.print((String)myGNSS.packetUBXNAVSVIN->data.dur); // Read the survey-in duration directly from packetUBXNAVSVIN
 
